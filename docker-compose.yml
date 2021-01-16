@@ -1,0 +1,21 @@
+version: '3.7'
+
+services:
+  cloudflare_exporter:
+    container_name: cloudflare_exporter
+    restart: unless-stopped
+    cpu_count: 1
+    mem_limit: 64m
+    logging:
+      options:
+        max-size: "3m"
+        max-file: "1"
+    ports:
+     - "2112:2112"
+    build:
+      context: .
+      dockerfile: Dockerfile
+    environment:
+     - CF_DATASET=waf,http,workers
+    env_file:
+     - ./secrets.env
