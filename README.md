@@ -2,7 +2,7 @@
 
 This is a fork of the [Cloudflare Exporter](https://gitlab.com/stephane5/cloudflare_exporter) written by [Stephane](https://gitlab.com/stephane5).
 
-![grafana_image](https://github.com/maesoser/cloudflare_exporter/raw/master/grafana_dashboards/dashboard_image.jpeg)
+![grafana_image](https://github.com/maesoser/cloudflare_exporter/raw/main/grafana_dashboards/dashboard_image.jpeg)
 
 ## Changes from Stephane's version
 
@@ -126,4 +126,4 @@ Once launched with valid credentials, the binary will spin a webserver on http:/
 - [ ] Add DNS Firewall metrics
 - [ ] Return old last scrapped metrics if time between scrappings is less than 5 min
 - [ ] Refactorize
-- [ ] Add Grafana Dashboards
+- [x] Add Grafana Dashboards
