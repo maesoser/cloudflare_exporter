@@ -63,8 +63,7 @@ func buildDNSQueryOptions(startDate, endDate string) string {
 	return v.Encode()
 }
 
-func getCloudflareDNSMetrics(zoneID, mail, key, options string) (respData DNSAnalytics, err error) {
-	uri := "https://api.cloudflare.com/client/v4/zones/" + zoneID + "/dns_analytics/report?" + options
+func getCloudflareDNSReport(uri, mail, key string) (respData DNSAnalytics, err error) {
 	response := DNSAnalyticsResponse{}
 	res, err := doRequest(uri, mail, key)
 	if err != nil {
@@ -75,4 +74,14 @@ func getCloudflareDNSMetrics(zoneID, mail, key, options string) (respData DNSAna
 		return response.Result, errors.Wrap(err, "error making Request")
 	}
 	return response.Result, nil
+}
+
+func getCloudflareDNSMetrics(zoneID, mail, key, options string) (respData DNSAnalytics, err error) {
+	uri := "https://api.cloudflare.com/client/v4/zones/" + zoneID + "/dns_analytics/report?" + options
+	return getCloudflareDNSReport(uri, mail, key)
+}
+
+func getCloudflareDNSFirewallMetrics(accountID, vdnsID, mail, key, options string) (respData DNSAnalytics, err error) {
+	uri := "https://api.cloudflare.com/client/v4/accounts/" + accountID + "/virtual_dns/" + vdnsID + "/dns_analytics/report?" + options
+	return getCloudflareDNSReport(uri, mail, key)
 }

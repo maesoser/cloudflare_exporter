@@ -16,6 +16,8 @@ This is a fork of the [Cloudflare Exporter](https://gitlab.com/stephane5/cloudfl
  - Modified "http" dataset to return more metrics
  - Added "waf" dataset
  - Added "workers" dataset
+ - Added "dns" dataset
+ - Added "vdns" dataset
 
 ## Supported metrics
 
@@ -48,6 +50,12 @@ This is a fork of the [Cloudflare Exporter](https://gitlab.com/stephane5/cloudfl
    - Errors
    - Requests
    - SubRequests
+
+- DNS / DNS Firewall
+   - Total Requests
+   - Cached Requests
+   - Staled Requests
+   - Requests time (median,average, 90th percentile, 99th percentile)
 
 - Network
    - Bits (attackID)
@@ -97,7 +105,7 @@ Usage of ./cloudflare_exporter:
   -account string
     	Account ID to be fetched
   -dataset string
-    	The data source you want to export, valid values are: http, network (default "http,waf")
+    	The data source you want to export, valid values are: http, net, vdns, dns, workers, waf (default "http,waf")
   -email string
     	The email address associated with your Cloudflare API token and account
   -key string
@@ -113,7 +121,7 @@ You can also use the following env variables instead of cli arguments:
    - `CF_EMAIL` : The email address associated with your Cloudflare API token and account
    - `CF_ACCOUNT` : Account ID to be fetched
    - `CF_ZONE` : Zone Name to be fetched
-   - `CF_DATASET` : The data source you want to export, valid values are: http, net, waf, workers
+   - `CF_DATASET` : The data source you want to export, valid values are: http, net, waf, workers, vnds, dns
    - `CF_PROM_PORT` : Prometheus listening address
 
 
@@ -123,7 +131,7 @@ Once launched with valid credentials, the binary will spin a webserver on http:/
 
 - [ ] Add HealthCheck metrics
 - [x] Add DNS metrics
-- [ ] Add DNS Firewall metrics
+- [x] Add DNS Firewall metrics
 - [ ] Return old last scrapped metrics if time between scrappings is less than 5 min
 - [ ] Refactorize
 - [x] Add Grafana Dashboards
