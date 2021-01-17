@@ -1,6 +1,8 @@
-# Cloudflare prometheus exporter
+# Cloudflare exporter [![License](https://img.shields.io/github/license/maesoser/cloudflare_exporter)](https://www.gnu.org/licenses/gpl-3.0.html) 
 
 This is a fork of the [Cloudflare Exporter](https://gitlab.com/stephane5/cloudflare-prometheus-exporter) written by [Stephane](https://gitlab.com/stephane5).
+
+![grafana_image](https://github.com/maesoser/cloudflare_exporter/raw/master/grafana_dashboards/dashboard_image.jpeg)
 
 ## Changes from Stephane's version
 
@@ -8,12 +10,12 @@ This is a fork of the [Cloudflare Exporter](https://gitlab.com/stephane5/cloudfl
  - Removed [cli](https://github.com/urfave/cli) dependency.
  - Moved the collector to an specific file.
  - You can choose the listening port using `-prom-port`.
- - Now you can add multiple datasets like waf, http, workers, or net.
+ - Now you can add multiple datasets like waf, http, workers, net or dns.
  - If you have several zones but you only want to extract data from one of them you can use `-zone` to specify the **name** of the zone.
- - The metrics are refreshed when the get request is received by prometheus exporter and not every fixed time, following the guidelines by [Prometheus](https://prometheus.io/docs/instrumenting/writing_exporters/#deployment)
+ - The metrics are refreshed when the get request is received by prometheus exporter and not a fixed time, following the guidelines by [Prometheus](https://prometheus.io/docs/instrumenting/writing_exporters/#deployment)
  - Modified "http" dataset to return more metrics
  - Added "waf" dataset
- - Added workers dataset
+ - Added "workers" dataset
 
 ### Supported metrics
 
@@ -102,13 +104,21 @@ Usage of ./cloudflare-prometheus-exporter:
 
 Once launched with valid credentials, the binary will spin a webserver on http://localhost:2112/metrics exposing the metrics received from Cloudflare's GraphQL endpoint.
 
+You can also use the following env variables instead of cli arguments:
+   - `CF_KEY` : Your Cloudflare API token
+   - `CF_EMAIL` : The email address associated with your Cloudflare API token and account
+   - `CF_ACCOUNT` : Account ID to be fetched
+   - `CF_ZONE` : Zone Name to be fetched
+   - `CF_DATASET` : The data source you want to export, valid values are: http, net, waf, workers
+   - `CF_PROM_PORT` : Prometheus listening address
+
 ### Installation
 
 ```
 go get -u gitlab.com/maesoser/cloudflare-prometheus-exporter
 ```
 
-Once installed, call it as you would call any other GO binary 
+Once installed, call it as you would call any other go binary 
 
 ```
 cloudflare-prometheus-exporter <options>
@@ -116,9 +126,9 @@ cloudflare-prometheus-exporter <options>
 
 ## TODO
 
-- Add HealthCheck metrics
-- Add DNS metrics
-- Add DNS Firewall metrics
-- Return old last scrapped metrics if time between scrappings is less than 5 min
-- Refactorize
-- Add Grafana Dashboards
+[ ] Add HealthCheck metrics
+[x] Add DNS metrics
+[ ] Add DNS Firewall metrics
+[ ] Return old last scrapped metrics if time between scrappings is less than 5 min
+[ ] Refactorize
+[ ] Add Grafana Dashboards
