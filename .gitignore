@@ -1,9 +1,11 @@
 # Binaries for programs and plugins
+cloudflare_exporter
 *.exe
 *.exe~
 *.dll
 *.so
 *.dylib
+*.sh
 
 # Test binary, built with `go test -c`
 *.test

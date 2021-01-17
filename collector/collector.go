@@ -44,7 +44,7 @@ type CloudflareCollector struct {
 	accountID string
 	zoneName  string
 
-	api     *cloudflare.API
+	API     *cloudflare.API
 	zones   []cloudflare.Zone
 	account cloudflare.Account
 
@@ -80,11 +80,14 @@ func New(apiKey, apiMail, AccountID, zoneName, dataset string) *CloudflareCollec
 
 	addMetric(c.cfMetrics, "worker", "cputime", "CPU time consumed by worker", prometheus.GaugeValue, []string{"workerName", "accountName", "percentile"})
 	addMetric(c.cfMetrics, "worker", "errors", "Errors trigered by worker", prometheus.GaugeValue, []string{"workerName", "accountName"})
-	addMetric(c.cfMetrics, "workers", "requests", "Requests received by worker", prometheus.GaugeValue, []string{"workerName", "accountName"})
-	addMetric(c.cfMetrics, "workers", "subrequests", "Subrequests performed by worker", prometheus.GaugeValue, []string{"workerName", "accountName"})
+	addMetric(c.cfMetrics, "worker", "requests", "Requests received by worker", prometheus.GaugeValue, []string{"workerName", "accountName"})
+	addMetric(c.cfMetrics, "worker", "subrequests", "Subrequests performed by worker", prometheus.GaugeValue, []string{"workerName", "accountName"})
+
 	addMetric(c.cfMetrics, "net", "bits", "Number of bits, labelled per AttackID", prometheus.GaugeValue, []string{"attackID", "accountName", "attackProtocol", "mitigationType", "country", "destinationPort", "attackType"})
 	addMetric(c.cfMetrics, "net", "packets", "Number of packets, labelled per AttackID", prometheus.GaugeValue, []string{"attackID", "accountName", "attackProtocol", "mitigationType", "country", "destinationPort", "attackType"})
+
 	addMetric(c.cfMetrics, "waf", "events", "Cloudflare WAF Hits", prometheus.GaugeValue, []string{"as", "country", "action", "ruleID", "zoneName"})
+
 	addMetric(c.cfMetrics, "http", "bytes_by_cache_status", "The total number of processed bytes labelled per cache status", prometheus.GaugeValue, []string{"cacheStatus", "method", "contentType", "country", "zoneName"})
 	addMetric(c.cfMetrics, "http", "requests_by_response_code", "The total number of request, labelled per HTTP response codes", prometheus.GaugeValue, []string{"responseCode", "zoneName"})
 	addMetric(c.cfMetrics, "http", "requests_by_country", "The total number of request, labeled per Country", prometheus.GaugeValue, []string{"country", "zoneName"})
@@ -100,6 +103,14 @@ func New(apiKey, apiMail, AccountID, zoneName, dataset string) *CloudflareCollec
 	addMetric(c.cfMetrics, "http", "total_requests", "The total number of requests served", prometheus.GaugeValue, []string{"zoneName"})
 	addMetric(c.cfMetrics, "http", "cached_requests", "The total number of requests cached", prometheus.GaugeValue, []string{"zoneName"})
 	addMetric(c.cfMetrics, "http", "encrypted_requests", "The total number of requests encrypted", prometheus.GaugeValue, []string{"zoneName"})
+
+	addMetric(c.cfMetrics, "dns", "total_queries", "DNS query count", prometheus.GaugeValue, []string{"zoneName", "queryName", "queryType", "responseCode", "responseCached", "coloName"})
+	addMetric(c.cfMetrics, "dns", "uncached_queries", "DNS uncached query count", prometheus.GaugeValue, []string{"zoneName", "queryName", "queryType", "responseCode", "responseCached", "coloName"})
+	addMetric(c.cfMetrics, "dns", "staled_queries", "DNS statled queryy count", prometheus.GaugeValue, []string{"zoneName", "queryName", "queryType", "responseCode", "responseCached", "coloName"})
+	addMetric(c.cfMetrics, "dns", "average_response_milliseconds", "DNS average response time", prometheus.GaugeValue, []string{"zoneName", "queryName", "queryType", "responseCode", "responseCached", "coloName"})
+	addMetric(c.cfMetrics, "dns", "median_response_milliseconds", "DNS median response time", prometheus.GaugeValue, []string{"zoneName", "queryName", "queryType", "responseCode", "responseCached", "coloName"})
+	addMetric(c.cfMetrics, "dns", "90th_response_milliseconds", "DNS 90th percentile response time", prometheus.GaugeValue, []string{"zoneName", "queryName", "queryType", "responseCode", "responseCached", "coloName"})
+	addMetric(c.cfMetrics, "dns", "99th__response_milliseconds", "DNS 99th percentile response time", prometheus.GaugeValue, []string{"zoneName", "queryName", "queryType", "responseCode", "responseCached", "coloName"})
 
 	err := c.Validate()
 	if err != nil {
@@ -182,6 +193,13 @@ func (collector *CloudflareCollector) Collect(ch chan<- prometheus.Metric) {
 			log.Println(err)
 		}
 	}
+
+	if contains(collector.dataset, "dns") {
+		err = collector.collectDNS(ch)
+		if err != nil {
+			log.Println(err)
+		}
+	}
 }
 
 func (collector *CloudflareCollector) login() error {
@@ -189,21 +207,55 @@ func (collector *CloudflareCollector) login() error {
 	collector.endDate = time.Now().Add(time.Duration(-5) * time.Minute).Format(time.RFC3339)
 
 	var err error
-	collector.api, err = cloudflare.New(collector.apiKey, collector.apiEmail)
+	collector.API, err = cloudflare.New(collector.apiKey, collector.apiEmail)
 	if err != nil {
 		return err
 	}
-	collector.zones, err = collector.api.ListZones()
+	collector.zones, err = collector.API.ListZones()
 	if err != nil {
 		return err
 	}
 	if collector.accountID != "" {
-		collector.account, _, err = collector.api.Account(collector.accountID)
+		collector.account, _, err = collector.API.Account(collector.accountID)
 		if err != nil {
 			return err
 		}
 	}
 	return err
+}
+
+func (collector *CloudflareCollector) collectDNS(ch chan<- prometheus.Metric) error {
+	for _, zone := range collector.zones {
+		if zone.Plan.ZonePlanCommon.Name != "Enterprise Website" {
+			continue
+		}
+		if zone.Name != "" && zone.Name != collector.zoneName {
+			continue
+		}
+		log.Printf("Getting HTTP metrics for %s from %s to %s \n", zone.Name, collector.startDate, collector.endDate)
+		resp, err := getCloudflareDNSMetrics(zone.ID, collector.apiEmail, collector.apiKey, buildDNSQueryOptions(collector.startDate, collector.endDate))
+		if err == nil {
+			for _, node := range resp.Data {
+				ch <- collector.updateMetric("total_queries", node.Metrics[0],
+					zone.Name, node.Dimensions[0], node.Dimensions[1], node.Dimensions[2], node.Dimensions[3], node.Dimensions[4])
+				ch <- collector.updateMetric("uncached_queries", node.Metrics[1],
+					zone.Name, node.Dimensions[0], node.Dimensions[1], node.Dimensions[2], node.Dimensions[3], node.Dimensions[4])
+				ch <- collector.updateMetric("staled_queries", node.Metrics[2],
+					zone.Name, node.Dimensions[0], node.Dimensions[1], node.Dimensions[2], node.Dimensions[3], node.Dimensions[4])
+				ch <- collector.updateMetric("average_response_milliseconds", node.Metrics[3],
+					zone.Name, node.Dimensions[0], node.Dimensions[1], node.Dimensions[2], node.Dimensions[3], node.Dimensions[4])
+				ch <- collector.updateMetric("median_response_milliseconds", node.Metrics[4],
+					zone.Name, node.Dimensions[0], node.Dimensions[1], node.Dimensions[2], node.Dimensions[3], node.Dimensions[4])
+				ch <- collector.updateMetric("90th_response_milliseconds", node.Metrics[5],
+					zone.Name, node.Dimensions[0], node.Dimensions[1], node.Dimensions[2], node.Dimensions[3], node.Dimensions[4])
+				ch <- collector.updateMetric("99th__response_milliseconds", node.Metrics[6],
+					zone.Name, node.Dimensions[0], node.Dimensions[1], node.Dimensions[2], node.Dimensions[3], node.Dimensions[4])
+			}
+		} else {
+			log.Println("Fetch failed :", err)
+		}
+	}
+	return nil
 }
 
 func (collector *CloudflareCollector) collectHTTP(ch chan<- prometheus.Metric) error {
