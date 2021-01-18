@@ -135,3 +135,4 @@ Once launched with valid credentials, the binary will spin a webserver on http:/
 - [ ] Return old last scrapped metrics if time between scrappings is less than 5 min
 - [ ] Refactorize
 - [x] Add Grafana Dashboards
+- [ ] Add release binaries
