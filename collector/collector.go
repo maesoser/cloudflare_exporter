@@ -139,16 +139,16 @@ func (collector *CloudflareCollector) Describe(ch chan<- *prometheus.Desc) {
 func (collector *CloudflareCollector) Validate() error {
 
 	if collector.apiKey == "" || collector.apiEmail == "" {
-		return errors.New("Must provide both api-key and api-email")
+		return errors.New("must provide both api-key and api-email")
 	}
 	if len(collector.dataset) == 0 {
 		collector.dataset = append(collector.dataset, "http")
 	}
 	if contains(collector.dataset, "net") && collector.accountID == "" {
-		return errors.New("You must provide an accountID when exporting network analytics")
+		return errors.New("you must provide an accountID when exporting network analytics")
 	}
 	if contains(collector.dataset, "workers") && collector.accountID == "" {
-		return errors.New("You must provide an accountID when exporting worker analytics")
+		return errors.New("you must provide an accountID when exporting worker analytics")
 	}
 	return nil
 }
