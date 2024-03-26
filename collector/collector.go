@@ -159,39 +159,48 @@ func (collector *CloudflareCollector) Collect(ch chan<- prometheus.Metric) {
 	collector.mutex.Lock()
 	defer collector.mutex.Unlock()
 
-	var err error
-	err = collector.login()
-	if err != nil {
-		log.Println(err)
-		return
-	}
+	collector.collectDatasetNet(ch)
+	collector.collectDatasetHTTP(ch)
+	collector.collectDatasetWAF(ch)
+	collector.collectDatasetWorkers(ch)
+	collector.collectDatasetDNS(ch)
+}
+
+func (collector *CloudflareCollector) collectDatasetNet(ch chan<- prometheus.Metric) {
 	if contains(collector.dataset, "net") {
-		err = collector.collectNetwork(ch)
-		if err != nil {
+		if err := collector.collectNetwork(ch); err != nil {
 			log.Println(err)
 		}
 	}
+}
+
+func (collector *CloudflareCollector) collectDatasetHTTP(ch chan<- prometheus.Metric) {
 	if contains(collector.dataset, "http") {
-		err = collector.collectHTTP(ch)
-		if err != nil {
+		if err := collector.collectHTTP(ch); err != nil {
 			log.Println(err)
 		}
 	}
+}
+
+func (collector *CloudflareCollector) collectDatasetWAF(ch chan<- prometheus.Metric) {
 	if contains(collector.dataset, "waf") {
-		err = collector.collectWAF(ch)
-		if err != nil {
+		if err := collector.collectWAF(ch); err != nil {
 			log.Println(err)
 		}
 	}
+}
+
+func (collector *CloudflareCollector) collectDatasetWorkers(ch chan<- prometheus.Metric) {
 	if contains(collector.dataset, "workers") {
-		err = collector.collectWorkers(ch)
-		if err != nil {
+		if err := collector.collectWorkers(ch); err != nil {
 			log.Println(err)
 		}
 	}
+}
+
+func (collector *CloudflareCollector) collectDatasetDNS(ch chan<- prometheus.Metric) {
 	if contains(collector.dataset, "dns") {
-		err = collector.collectDNS(ch)
-		if err != nil {
+		if err := collector.collectDNS(ch); err != nil {
 			log.Println(err)
 		}
 	}
