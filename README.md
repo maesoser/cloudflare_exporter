@@ -1,10 +1,8 @@
 # Cloudflare exporter [![License](https://img.shields.io/github/license/neverlless/cloudflare_exporter)](https://www.gnu.org/licenses/gpl-3.0.html)
 
-This is a fork of the [Cloudflare Exporter](https://gitlab.com/stephane5/cloudflare_exporter) written by [Stephane](https://gitlab.com/stephane5).
-
 ![grafana_image](https://github.com/neverlless/cloudflare_exporter/raw/main/grafana_dashboards/dashboard_image.jpeg)
 
-## Changes from Stephane's version
+## Features from basic exporter
 
 - Modified the code structure.
 - Removed [cli](https://github.com/urfave/cli) dependency.
