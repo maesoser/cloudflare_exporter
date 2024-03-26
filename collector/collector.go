@@ -21,7 +21,6 @@ type metricInfo struct {
 	Desc *prometheus.Desc
 	Type prometheus.ValueType
 }
-type metrics map[string]metricInfo
 
 func addMetric(metrics map[string]metricInfo, submodule string, metricName string, docString string, t prometheus.ValueType, labels []string) {
 	key := prometheus.BuildFQName(namespace, submodule, metricName)
