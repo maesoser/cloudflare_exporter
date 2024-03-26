@@ -1,6 +1,7 @@
 package collector
 
 import (
+	"context"
 	"errors"
 	"log"
 	"strconv"
@@ -112,14 +113,6 @@ func New(apiKey, apiMail, AccountID, zoneName, dataset string) *CloudflareCollec
 	addMetric(c.cfMetrics, "dns", "90th_response_milliseconds", "DNS 90th percentile response time", prometheus.GaugeValue, []string{"zoneName", "queryName", "queryType", "responseCode", "responseCached", "coloName"})
 	addMetric(c.cfMetrics, "dns", "99th__response_milliseconds", "DNS 99th percentile response time", prometheus.GaugeValue, []string{"zoneName", "queryName", "queryType", "responseCode", "responseCached", "coloName"})
 
-	addMetric(c.cfMetrics, "vdns", "total_queries", "DNS query count", prometheus.GaugeValue, []string{"clusterName", "queryName", "queryType", "responseCode", "responseCached", "coloName"})
-	addMetric(c.cfMetrics, "vdns", "uncached_queries", "DNS uncached query count", prometheus.GaugeValue, []string{"clusterName", "queryName", "queryType", "responseCode", "responseCached", "coloName"})
-	addMetric(c.cfMetrics, "vdns", "staled_queries", "DNS statled queryy count", prometheus.GaugeValue, []string{"clusterName", "queryName", "queryType", "responseCode", "responseCached", "coloName"})
-	addMetric(c.cfMetrics, "vdns", "average_response_milliseconds", "DNS average response time", prometheus.GaugeValue, []string{"clusterName", "queryName", "queryType", "responseCode", "responseCached", "coloName"})
-	addMetric(c.cfMetrics, "vdns", "median_response_milliseconds", "DNS median response time", prometheus.GaugeValue, []string{"clusterName", "queryName", "queryType", "responseCode", "responseCached", "coloName"})
-	addMetric(c.cfMetrics, "vdns", "90th_response_milliseconds", "DNS 90th percentile response time", prometheus.GaugeValue, []string{"clusterName", "queryName", "queryType", "responseCode", "responseCached", "coloName"})
-	addMetric(c.cfMetrics, "vdns", "99th__response_milliseconds", "DNS 99th percentile response time", prometheus.GaugeValue, []string{"clusterName", "queryName", "queryType", "responseCode", "responseCached", "coloName"})
-
 	err := c.Validate()
 	if err != nil {
 		log.Fatal(err)
@@ -203,12 +196,6 @@ func (collector *CloudflareCollector) Collect(ch chan<- prometheus.Metric) {
 			log.Println(err)
 		}
 	}
-	if contains(collector.dataset, "vdns") {
-		err = collector.collectDNSFirewall(ch)
-		if err != nil {
-			log.Println(err)
-		}
-	}
 }
 
 func (collector *CloudflareCollector) login() error {
@@ -220,12 +207,12 @@ func (collector *CloudflareCollector) login() error {
 	if err != nil {
 		return err
 	}
-	collector.zones, err = collector.API.ListZones()
+	collector.zones, err = collector.API.ListZones(context.Background())
 	if err != nil {
 		return err
 	}
 	if collector.accountID != "" {
-		collector.account, _, err = collector.API.Account(collector.accountID)
+		collector.account, _, err = collector.API.Account(context.Background(), collector.accountID)
 		if err != nil {
 			return err
 		}
@@ -264,39 +251,6 @@ func (collector *CloudflareCollector) collectDNS(ch chan<- prometheus.Metric) er
 			log.Println("Fetch failed :", err)
 		}
 	}
-	return nil
-}
-
-func (collector *CloudflareCollector) collectDNSFirewall(ch chan<- prometheus.Metric) error {
-	vDNSList, err := collector.API.ListVirtualDNS()
-	if err != nil {
-		return err
-	}
-	for _, vdns := range vDNSList {
-		log.Printf("Getting vDNS metrics for %s from %s to %s \n", vdns.Name, collector.startDate, collector.endDate)
-		resp, err := getCloudflareDNSFirewallMetrics(collector.accountID, vdns.ID, collector.apiEmail, collector.apiKey, buildDNSQueryOptions(collector.startDate, collector.endDate))
-		if err == nil {
-			for _, node := range resp.Data {
-				ch <- collector.updateMetric("total_queries", node.Metrics[0],
-					vdns.Name, node.Dimensions[0], node.Dimensions[1], node.Dimensions[2], node.Dimensions[3], node.Dimensions[4])
-				ch <- collector.updateMetric("uncached_queries", node.Metrics[1],
-					vdns.Name, node.Dimensions[0], node.Dimensions[1], node.Dimensions[2], node.Dimensions[3], node.Dimensions[4])
-				ch <- collector.updateMetric("staled_queries", node.Metrics[2],
-					vdns.Name, node.Dimensions[0], node.Dimensions[1], node.Dimensions[2], node.Dimensions[3], node.Dimensions[4])
-				ch <- collector.updateMetric("average_response_milliseconds", node.Metrics[3],
-					vdns.Name, node.Dimensions[0], node.Dimensions[1], node.Dimensions[2], node.Dimensions[3], node.Dimensions[4])
-				ch <- collector.updateMetric("median_response_milliseconds", node.Metrics[4],
-					vdns.Name, node.Dimensions[0], node.Dimensions[1], node.Dimensions[2], node.Dimensions[3], node.Dimensions[4])
-				ch <- collector.updateMetric("90th_response_milliseconds", node.Metrics[5],
-					vdns.Name, node.Dimensions[0], node.Dimensions[1], node.Dimensions[2], node.Dimensions[3], node.Dimensions[4])
-				ch <- collector.updateMetric("99th__response_milliseconds", node.Metrics[6],
-					vdns.Name, node.Dimensions[0], node.Dimensions[1], node.Dimensions[2], node.Dimensions[3], node.Dimensions[4])
-			}
-		} else {
-			log.Println("Fetch failed :", err)
-		}
-	}
-
 	return nil
 }
 

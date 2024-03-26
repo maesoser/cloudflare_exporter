@@ -80,8 +80,3 @@ func getCloudflareDNSMetrics(zoneID, mail, key, options string) (respData DNSAna
 	uri := "https://api.cloudflare.com/client/v4/zones/" + zoneID + "/dns_analytics/report?" + options
 	return getCloudflareDNSReport(uri, mail, key)
 }
-
-func getCloudflareDNSFirewallMetrics(accountID, vdnsID, mail, key, options string) (respData DNSAnalytics, err error) {
-	uri := "https://api.cloudflare.com/client/v4/accounts/" + accountID + "/virtual_dns/" + vdnsID + "/dns_analytics/report?" + options
-	return getCloudflareDNSReport(uri, mail, key)
-}

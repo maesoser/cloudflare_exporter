@@ -17,7 +17,6 @@ This is a Prometheus exporter for Cloudflare's API. It uses the GraphQL API to f
 - Added "waf" dataset
 - Added "workers" dataset
 - Added "dns" dataset
-- Added "vdns" dataset
 
 ## Supported metrics
 
@@ -105,7 +104,7 @@ Usage of ./cloudflare_exporter:
   -account string
        Account ID to be fetched
   -dataset string
-       The data source you want to export, valid values are: http, net, vdns, dns, workers, waf (default "http,waf")
+       The data source you want to export, valid values are: http, net, dns, workers, waf (default "http,waf")
   -email string
        The email address associated with your Cloudflare API token and account
   -key string
