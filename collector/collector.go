@@ -1,20 +1,20 @@
 package collector
 
 import (
-	"context"
 	"errors"
 	"log"
 	"strconv"
 	"strings"
 	"sync"
-	"time"
 
 	"github.com/cloudflare/cloudflare-go"
 	"github.com/prometheus/client_golang/prometheus"
 )
 
 const (
-	namespace = "cloudflare"
+	namespace          = "cloudflare"
+	enterpriseWebsite  = "Enterprise Website"
+	fetchFailedMessage = "Fetch failed :"
 )
 
 type metricInfo struct {
@@ -206,31 +206,9 @@ func (collector *CloudflareCollector) collectDatasetDNS(ch chan<- prometheus.Met
 	}
 }
 
-func (collector *CloudflareCollector) login() error {
-	collector.startDate = time.Now().Add(time.Duration(-20) * time.Minute).Format(time.RFC3339)
-	collector.endDate = time.Now().Add(time.Duration(-5) * time.Minute).Format(time.RFC3339)
-
-	var err error
-	collector.API, err = cloudflare.New(collector.apiKey, collector.apiEmail)
-	if err != nil {
-		return err
-	}
-	collector.zones, err = collector.API.ListZones(context.Background())
-	if err != nil {
-		return err
-	}
-	if collector.accountID != "" {
-		collector.account, _, err = collector.API.Account(context.Background(), collector.accountID)
-		if err != nil {
-			return err
-		}
-	}
-	return err
-}
-
 func (collector *CloudflareCollector) collectDNS(ch chan<- prometheus.Metric) error {
 	for _, zone := range collector.zones {
-		if zone.Plan.ZonePlanCommon.Name != "Enterprise Website" {
+		if zone.Plan.ZonePlanCommon.Name != enterpriseWebsite {
 			continue
 		}
 		if zone.Name != "" && zone.Name != collector.zoneName {
@@ -256,7 +234,7 @@ func (collector *CloudflareCollector) collectDNS(ch chan<- prometheus.Metric) er
 					zone.Name, node.Dimensions[0], node.Dimensions[1], node.Dimensions[2], node.Dimensions[3], node.Dimensions[4])
 			}
 		} else {
-			log.Println("Fetch failed :", err)
+			log.Println(fetchFailedMessage, err)
 		}
 	}
 	return nil
@@ -264,7 +242,7 @@ func (collector *CloudflareCollector) collectDNS(ch chan<- prometheus.Metric) er
 
 func (collector *CloudflareCollector) collectHTTP(ch chan<- prometheus.Metric) error {
 	for _, zone := range collector.zones {
-		if zone.Plan.ZonePlanCommon.Name != "Enterprise Website" {
+		if zone.Plan.ZonePlanCommon.Name != enterpriseWebsite {
 			continue
 		}
 		if zone.Name != "" && zone.Name != collector.zoneName {
@@ -307,7 +285,7 @@ func (collector *CloudflareCollector) collectHTTP(ch chan<- prometheus.Metric) e
 				ch <- collector.updateMetric("requests_by_http_version", float64(node.Requests), node.ClientHTTPProtocol, zone.Name)
 			}
 		} else {
-			log.Println("Fetch failed :", err)
+			log.Println(fetchFailedMessage, err)
 		}
 	}
 	return nil
@@ -315,7 +293,7 @@ func (collector *CloudflareCollector) collectHTTP(ch chan<- prometheus.Metric) e
 
 func (collector *CloudflareCollector) collectWAF(ch chan<- prometheus.Metric) error {
 	for _, zone := range collector.zones {
-		if zone.Plan.ZonePlanCommon.Name != "Enterprise Website" {
+		if zone.Plan.ZonePlanCommon.Name != enterpriseWebsite {
 			continue
 		}
 		if zone.Name != "" && zone.Name != collector.zoneName {
@@ -332,7 +310,7 @@ func (collector *CloudflareCollector) collectWAF(ch chan<- prometheus.Metric) er
 				ch <- collector.updateMetric("events", float64(node.Count), node.Dimensions.ASName, node.Dimensions.Country, node.Dimensions.Action, node.Dimensions.RuleID, zone.Name)
 			}
 		} else {
-			log.Println("Fetch failed :", err)
+			log.Println(fetchFailedMessage, err)
 		}
 	}
 	return nil
@@ -387,7 +365,7 @@ func (collector *CloudflareCollector) collectNetwork(ch chan<- prometheus.Metric
 			)
 		}
 	} else {
-		log.Println("Fetch failed :", err)
+		log.Println(fetchFailedMessage, err)
 	}
 	return nil
 }
