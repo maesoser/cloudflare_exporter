@@ -11,11 +11,11 @@ services:
         max-size: "3m"
         max-file: "1"
     ports:
-     - "2112:2112"
+      - "2112:2112"
     build:
       context: .
       dockerfile: Dockerfile
     environment:
-     - CF_DATASET=waf,http,workers
+      - CF_DATASET=waf,http,workers
     env_file:
-     - ./secrets.env
+      - ./.env
