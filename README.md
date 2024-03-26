@@ -1,8 +1,8 @@
-# Cloudflare exporter [![License](https://img.shields.io/github/license/maesoser/cloudflare_exporter)](https://www.gnu.org/licenses/gpl-3.0.html) 
+# Cloudflare exporter [![License](https://img.shields.io/github/license/neverlless/cloudflare_exporter)](https://www.gnu.org/licenses/gpl-3.0.html) 
 
 This is a fork of the [Cloudflare Exporter](https://gitlab.com/stephane5/cloudflare_exporter) written by [Stephane](https://gitlab.com/stephane5).
 
-![grafana_image](https://github.com/maesoser/cloudflare_exporter/raw/main/grafana_dashboards/dashboard_image.jpeg)
+![grafana_image](https://github.com/neverlless/cloudflare_exporter/raw/main/grafana_dashboards/dashboard_image.jpeg)
 
 ## Changes from Stephane's version
 
@@ -94,7 +94,7 @@ cloudflare_waf_events{action="challenge",as="AS-30083-GO-DADDY-COM-LLC",country=
 ## Installation
 
 ```
-go get -u github.com/maesoser/cloudflare_exporter
+go get -u github.com/neverlless/cloudflare_exporter
 ```
 
 ## Usage

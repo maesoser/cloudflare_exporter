@@ -2,7 +2,7 @@ FROM golang:alpine as builder
 
 LABEL version=1.0
 
-ENV REPODIR=/go/src/gitlab.com/maesoser/cloudflare-prometheus-exporter
+ENV REPODIR=/go/src/gitlab.com/neverlless/cloudflare-prometheus-exporter
 
 WORKDIR ${REPODIR}
 COPY *.go ${REPODIR}/
