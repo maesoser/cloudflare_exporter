@@ -1,5 +1,7 @@
 # Cloudflare exporter [![License](https://img.shields.io/github/license/neverlless/cloudflare_exporter)](https://www.gnu.org/licenses/gpl-3.0.html)
 
+This is a Prometheus exporter for Cloudflare's API. It uses the GraphQL API to fetch data from your account and expose it in a format that Prometheus can scrape.
+
 ![grafana_image](https://github.com/neverlless/cloudflare_exporter/raw/main/grafana_dashboards/dashboard_image.jpeg)
 
 ## Features from basic exporter
