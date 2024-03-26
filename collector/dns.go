@@ -2,7 +2,7 @@ package collector
 
 import (
 	"encoding/json"
-	"io/ioutil"
+	"io"
 	"log"
 	"net/http"
 	"net/url"
@@ -45,7 +45,9 @@ func doRequest(url, mail, key string) (respData []byte, err error) {
 	if err != nil {
 		return nil, err
 	}
-	body, err := ioutil.ReadAll(response.Body)
+	defer response.Body.Close() // Don't forget to close the response body
+
+	body, err := io.ReadAll(response.Body) // Here's the change from ioutil.ReadAll to io.ReadAll
 	if err != nil {
 		log.Fatalln(err)
 	}
