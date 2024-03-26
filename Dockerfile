@@ -1,20 +1,17 @@
-FROM golang:alpine as builder
+FROM golang:1.22.0-alpine3.19 as builder
 
-LABEL version=1.0
+LABEL version="v0.0.2"
 
 ENV REPODIR=/go/src/gitlab.com/neverlless/cloudflare-prometheus-exporter
-
 WORKDIR ${REPODIR}
-COPY *.go ${REPODIR}/
-COPY collector/*.go ${REPODIR}/collector/
-COPY *.toml ${REPODIR}/
 
-RUN apk update && \
-    apk add --no-cache git && \
-    apk add --no-cache ca-certificates && \
-    update-ca-certificates 2>/dev/null || true && \
-    go get -u github.com/golang/dep/cmd/dep && \
-    dep ensure
+COPY go.mod go.sum ${REPODIR}/
+RUN go mod download
+
+COPY . ${REPODIR}/
+
+RUN apk update && apk add --no-cache git ca-certificates && \
+    update-ca-certificates
 
 RUN CGO_ENABLED=0 GOOS=linux go build -o /cloudflare_exporter -a -installsuffix cgo -ldflags '-extldflags "-static"' .
 
